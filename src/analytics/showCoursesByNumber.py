@@ -1,5 +1,4 @@
 from sqlite3 import Connection
-from typing import List
 
 import streamlit
 from pandas import DataFrame
@@ -64,8 +63,38 @@ class ShowCoursesByNumber(Analytic):
         :return: None
         :rtype: None
         """
+        # clearContent()
+
+        # streamlit.session_state["analyticTitle"] = (
+        #     "Show Courses by Course Number"
+        # )
+        # streamlit.session_state["analyticSubtitle"] = (
+        #     "A view of courses that share a course number"
+        # )
+
+        # dfList: List[DataFrame] = []
+        # dfListTitles: List[str] = []
+        # dfListSubtitles: List[str] = []
+
+        # df: DataFrame
+        # for name, df in self.compute(
+        #     filterZeroEnrollment=streamlit.session_state["filterZero"]
+        # ):
+        #     dfList.append(df)
+        #     dfListTitles.append(name)
+        #     dfListSubtitles.append(df["CLASS TITLE"].unique()[0])
+
+        # streamlit.session_state["filterZero"] = streamlit.checkbox(
+        #     "Filter out rows with ENROLL TOTAL as 0", value=False
+        # )
+
+        # streamlit.session_state["dfList"] = dfList
+        # streamlit.session_state["dfListTitles"] = dfListTitles
+        # streamlit.session_state["dfListSubtitles"] = dfListSubtitles
+
         clearContent()
 
+        # Set analytic title and subtitle
         streamlit.session_state["analyticTitle"] = (
             "Show Courses by Course Number"
         )
@@ -73,22 +102,23 @@ class ShowCoursesByNumber(Analytic):
             "A view of courses that share a course number"
         )
 
-        dfList: List[DataFrame] = []
-        dfListTitles: List[str] = []
-        dfListSubtitles: List[str] = []
-
-        df: DataFrame
-        for name, df in self.compute(
+        # Compute the grouped data with the filtering applied
+        grouped_data = self.compute(
             filterZeroEnrollment=streamlit.session_state["filterZero"]
-        ):
+        )
+
+        # Prepare lists to store DataFrame chunks, titles, and subtitles
+        dfList = []
+        dfListTitles = []
+        dfListSubtitles = []
+
+        # Process grouped data for visualization
+        for name, df in grouped_data:
             dfList.append(df)
             dfListTitles.append(name)
             dfListSubtitles.append(df["CLASS TITLE"].unique()[0])
 
-        streamlit.session_state["filterZero"] = streamlit.checkbox(
-            "Filter out rows with ENROLL TOTAL as 0", value=False
-        )
-
+        # Update session state for visualization
         streamlit.session_state["dfList"] = dfList
         streamlit.session_state["dfListTitles"] = dfListTitles
         streamlit.session_state["dfListSubtitles"] = dfListSubtitles

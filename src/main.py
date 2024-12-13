@@ -72,6 +72,15 @@ def main() -> None:
     else:
         resetState()
 
+    if "dfList" not in streamlit.session_state:
+        streamlit.session_state["dfList"] = []
+
+    if "dfListTitles" not in streamlit.session_state:
+        streamlit.session_state["dfListTitles"] = []
+
+    if "dfListSubtitles" not in streamlit.session_state:
+        streamlit.session_state["dfListSubtitles"] = []
+
     if streamlit.session_state["showAnalyticButtons"]:
         column1: DeltaGenerator
         column2: DeltaGenerator
@@ -199,21 +208,22 @@ def main() -> None:
             )
 
         if "filterZero" not in streamlit.session_state:
-            streamlit.session_state["filterZero"] = False  # Default val
+            streamlit.session_state["filterZero"] = False
 
-        if streamlit.session_state["filterZero"] is not None:
-            streamlit.session_state["filterZero"] = streamlit.checkbox(
-                "Filter out rows with ENROLL TOTAL as 0",
-                value=streamlit.session_state["filterZero"],
-                key="filterZeroCheckbox",
-            )
+        # Define the checkbox
+        streamlit.session_state["filterZero"] = streamlit.checkbox(
+            "Filter out rows with ENROLL TOTAL as 0",
+            value=streamlit.session_state["filterZero"],
+            key="filterZeroCheckbox",
+        )
 
-            filter_message = (
-                "Filtering out rows with ENROLL TOTAL as 0 is enabled. To add rows with 0 back in, uncheck the box and re-select the widget."  # noqa: E501
-                if streamlit.session_state["filterZero"]
-                else "All rows, including those with ENROLL TOTAL as 0, are displayed. To filter out rows with 0, check the box and re-select the widget."  # noqa: E501
-            )
-            streamlit.markdown(f"> {filter_message}")
+        # Show status message for filtering
+        filter_message = (
+            "Filtering rows with ENROLL TOTAL as 0 is enabled."
+            if streamlit.session_state["filterZero"]
+            else "All rows are displayed, including those with ENROLL TOTAL as 0."  # noqa: E501
+        )
+        streamlit.markdown(f"> {filter_message}")
 
         try:
             fig: Figure
@@ -235,24 +245,32 @@ def main() -> None:
         try:
             df: DataFrame
             for df in streamlit.session_state["dfList"]:
+                # Check if "dfListTitles" exists and is non-empty
+                if (
+                    streamlit.session_state.get("dfListTitles")
+                    and len(streamlit.session_state["dfListTitles"]) > 0
+                ):
+                    title = streamlit.session_state["dfListTitles"].pop(0)
+                    streamlit.markdown(body=f"##### {title}")
 
-                if streamlit.session_state["dfListTitles"] is not None:
-                    streamlit.markdown(
-                        body=f"##### \
-                        {streamlit.session_state['dfListTitles'].pop(0)}"
+                # Check if "dfListSubtitles" exists and is non-empty
+                if (
+                    streamlit.session_state.get("dfListSubtitles")
+                    and len(streamlit.session_state["dfListSubtitles"]) > 0
+                ):
+                    subtitle = streamlit.session_state["dfListSubtitles"].pop(
+                        0
                     )
+                    streamlit.markdown(body=f"> {subtitle}")  # noqa: E501
 
-                if streamlit.session_state["dfListSubtitles"] is not None:
-                    streamlit.markdown(
-                        body=f"> {streamlit.session_state['dfListSubtitles'].pop(0)}"  # noqa: E501
-                    )
-
+                # Render the dataframe
                 streamlit.dataframe(
                     data=df,
                     use_container_width=True,
                 )
-        except TypeError:
-            pass
+        except Exception as e:
+            streamlit.error(f"An error occurred: {e}")
+
     if streamlit.session_state.get("current_page") == "filter":
         if "dbConn" in streamlit.session_state:
             FilterCourseSchedule(conn=streamlit.session_state["dbConn"]).run()
